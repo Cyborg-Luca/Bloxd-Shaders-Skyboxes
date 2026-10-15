@@ -12,6 +12,7 @@ Cinq ambiances, chacune avec un shader et une skybox assortie :
 | **Sunrise** – lever de soleil doré | `shaders/Sunrise` | `skyboxes/Sunrise` | ![Sunrise](previews/Sunrise.png) |
 | **Sunset** – coucher de soleil orange | `shaders/Sunset` | `skyboxes/Sunset` | ![Sunset](previews/Sunset.png) |
 | **Night** – nuit au clair de lune | `shaders/Night` | `skyboxes/Night` | ![Night](previews/Night.png) |
+| **Cycle** – les 5 ambiances en un seul shader | `shaders/Cycle` | (aucune, voir plus bas) | |
 
 ## Contenu
 
@@ -31,6 +32,16 @@ tools/make_sky.py      script qui génère les skyboxes
 - Ils modifient le terrain (`bloxdTerrainLight`) et l'eau (`bloxdLiquidSurface`, `bloxdLiquidLight`).
 - Chaque shader a sa direction et sa couleur de soleil (`SUN_RAW`, `SUN_COLOUR`), sa couleur de brouillard et son ombrage.
 - Un shader ne peut pas dessiner le ciel : l'API n'a pas de fonction pour ça. C'est pour ça qu'il y a des skyboxes à part.
+
+## Shader Cycle (tout en un)
+
+`shaders/Cycle/cycle.wgsl` enchaîne Night → Sunrise → Morning → Day → Sunset → Night en fondu, d'après `bloxdTime()`.
+
+- `CYCLE_SECONDS` : durée d'un cycle complet (doit diviser 3600 : 600, 900, 1200, 1800, 3600).
+- `START_LOOK` : ambiance au démarrage (0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset).
+- `HOLD` : durée de chaque ambiance avant de passer à la suivante.
+- `USE_GAME_SUN` : mode optionnel (`false` par défaut) qui suit `bloxdSunDirection()` au lieu de l'horloge. Non testé, il ne marche que si le monde a un soleil qui bouge.
+- Le shader ne change que le terrain et l'eau. Une skybox est fixe : elle ne change pas avec le cycle.
 
 ## Skyboxes
 
