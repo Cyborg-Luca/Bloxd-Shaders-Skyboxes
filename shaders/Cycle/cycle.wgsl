@@ -8,9 +8,12 @@ const START_LOOK: f32 = 3.0;
 // 0 = chaque ambiance dure pareil et se fond doucement dans la suivante ; 1 = fondu tres court
 const HOLD: f32 = 0.35;
 
-// Mode optionnel : suivre le soleil du jeu (bloxdSunDirection) au lieu de l'horloge.
-// A tester : ne marche que si le monde a un vrai cycle jour/nuit avec un soleil qui bouge.
-const USE_GAME_SUN: bool = false;
+// Suivre le vrai soleil du jeu (bloxdSunDirection) : le shader reste synchro avec l'heure du jeu.
+// Si le soleil du jeu est introuvable, le shader retombe tout seul sur l'horloge (CYCLE_SECONDS).
+const USE_GAME_SUN: bool = true;
+// Direction de l'EST dans le monde (la ou le soleil se leve). Si le MATIN ressemble au SOIR dans le jeu,
+// essaie une autre valeur : vec3f(1.0, 0.0, 0.0)  ou  vec3f(0.0, 0.0, 1.0)  ou  vec3f(0.0, 0.0, -1.0)
+const SUN_EAST: vec3f = vec3f(-1.0, 0.0, 0.0);
 
 const LUMA: vec3f = vec3f(0.299, 0.587, 0.114);
 const LOOKS: i32 = 5;
@@ -40,9 +43,9 @@ fn lookAt(i: i32) -> Look {
         // 0 : Night
         case 0: {
             k = Look(
-                vec3f(0.30, 0.80, -0.50), vec3f(0.60, 0.70, 1.00), vec3f(0.45, 0.55, 0.95), vec3f(0.75, 0.85, 1.10),
+                vec3f(0.30, 0.80, -0.50), vec3f(0.60, 0.70, 1.00), vec3f(0.72, 0.80, 1.00), vec3f(0.85, 0.92, 1.08),
                 vec3f(0.04, 0.07, 0.18), vec3f(0.03, 0.08, 0.22), vec3f(0.15, 0.20, 0.38),
-                0.60, 0.50, 0.15, 0.90, 0.60, 0.60, 48.0, 0.6, 0.05);
+                0.75, 0.95, 0.08, 0.95, 0.60, 0.60, 48.0, 0.6, 0.05);
         }
         // 1 : Sunrise
         case 1: {
@@ -101,9 +104,9 @@ fn clockPhase() -> f32 {
     return k + smoothstep(HOLD, 1.0 - HOLD, fract(q));
 }
 
-// Position dans le cycle d'apres le soleil du jeu (est = -x, comme dans les autres packs).
+// Position dans le cycle d'apres le soleil du jeu.
 fn sunPhase(s: vec3f) -> f32 {
-    let a = atan2(s.y, -s.x);              // 0 = soleil a l'horizon est, pi/2 = zenith, +-pi = horizon ouest
+    let a = atan2(s.y, dot(s, SUN_EAST));  // 0 = soleil a l'horizon est, pi/2 = zenith, +-pi = horizon ouest
     let pi = 3.14159265;
     if (a < -pi + 0.35) { return 4.0 + (a + pi) / 0.35; }          // sunset -> night
     if (a < -0.35)      { return 5.0; }                            // night
@@ -117,13 +120,22 @@ fn sunPhase(s: vec3f) -> f32 {
 
 fn currentLook() -> Look {
     var p = clockPhase();
+    var realSun = vec3f(0.0);
+    var haveSun = false;
     if (USE_GAME_SUN) {
-        let s = bloxdSunDirection();
-        if (length(s) > 0.01) {
-            p = sunPhase(normalize(s));
+        let g = bloxdSunDirection();
+        if (length(g) > 0.01) {
+            realSun = normalize(g);
+            haveSun = true;
+            p = sunPhase(realSun);
         }
     }
-    return lookBlend(p);
+    var k = lookBlend(p);
+    if (haveSun) {
+        // de jour, l'ombrage suit le vrai soleil ; de nuit on garde la direction de la lune
+        k.sun = normalize(mix(k.sun, realSun, smoothstep(-0.05, 0.10, realSun.y)));
+    }
+    return k;
 }
 
 fn grade(s: BloxdSurface, l: BloxdLightIn, k: Look) -> vec3f {

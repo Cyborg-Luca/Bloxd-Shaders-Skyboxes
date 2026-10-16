@@ -40,7 +40,8 @@ tools/make_sky.py      script qui génère les skyboxes
 - `CYCLE_SECONDS` : durée d'un cycle complet (doit diviser 3600 : 600, 900, 1200, 1800, 3600).
 - `START_LOOK` : ambiance au démarrage (0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset).
 - `HOLD` : durée de chaque ambiance avant de passer à la suivante.
-- `USE_GAME_SUN` : mode optionnel (`false` par défaut) qui suit `bloxdSunDirection()` au lieu de l'horloge. Non testé, il ne marche que si le monde a un soleil qui bouge.
+- `USE_GAME_SUN` : `true` par défaut, le shader suit le vrai soleil du jeu (`bloxdSunDirection()`) et reste synchro avec l'heure. Sans soleil dans le monde, il retombe sur l'horloge.
+- `SUN_EAST` : direction de l'est. Si le matin ressemble au soir dans le jeu, essaie `vec3f(1,0,0)`, `vec3f(0,0,1)` ou `vec3f(0,0,-1)`.
 - Le shader ne change que le terrain et l'eau. Une skybox est fixe : elle ne change pas avec le cycle.
 
 ## Skyboxes
