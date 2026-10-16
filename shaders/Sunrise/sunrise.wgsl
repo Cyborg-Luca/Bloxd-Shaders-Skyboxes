@@ -26,7 +26,6 @@ fn gradeLight(s: BloxdSurface, l: BloxdLightIn) -> vec3f {
     let ndl = max(facing, 0.0);
     let wrap = clamp(facing * 0.5 + 0.5, 0.0, 1.0);
 
-    // cool lavender shadows, golden light on the sun side
     let tint = mix(SKY_COLOUR, WARM_COLOUR, wrap);
     let shade = mix(SHADE_MIN, 1.0, clamp(facing * 1.5 + 0.3, 0.0, 1.0));
     var lit = l.litColour * tint * shade * EXPOSURE;
@@ -37,7 +36,6 @@ fn gradeLight(s: BloxdSurface, l: BloxdLightIn) -> vec3f {
     let grey = dot(lit, LUMA);
     lit = mix(vec3f(grey), lit, SATURATION);
 
-    // morning mist: distant terrain fades into the golden-rose horizon
     let fogCol = mix(l.fogColour, FOG_COLOUR, FOG_MIX);
     let fogged = mix(fogCol, lit, l.fogVisibility);
 
