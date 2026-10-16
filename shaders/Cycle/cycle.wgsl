@@ -109,9 +109,9 @@ fn clockPhase() -> f32 {
 // Plus la valeur est PETITE, plus l'ambiance arrive TOT. Valeurs conseillees entre 0.0 et 3.14, dans l'ordre croissant.
 const A_SUNRISE: f32 = 0.10;   // look Sunrise atteint
 const A_MORNING: f32 = 0.45;   // look Morning atteint
-const A_DAY: f32 = 1.25;       // look Day atteint (augmente pour retarder le plein midi)
-const A_DAY_END: f32 = 1.60;   // fin du plein jour, le fondu vers Sunset commence
-const A_SUNSET: f32 = 2.20;    // look Sunset atteint (diminue pour un soir plus tot)
+const A_DAY: f32 = 1.20;       // look Day atteint (augmente pour retarder le plein midi)
+const A_DAY_END: f32 = 2.05;   // fin du plein jour, le fondu vers Sunset commence
+const A_SUNSET: f32 = 2.80;    // look Sunset atteint (diminue pour un soir plus tot)
 
 // Position dans le cycle d'apres le soleil du jeu.
 fn sunPhase(s: vec3f) -> f32 {
