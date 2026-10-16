@@ -11,9 +11,9 @@ const HOLD: f32 = 0.35;
 // Suivre le vrai soleil du jeu (bloxdSunDirection) : le shader reste synchro avec l'heure du jeu.
 // Si le soleil du jeu est introuvable, le shader retombe tout seul sur l'horloge (CYCLE_SECONDS).
 const USE_GAME_SUN: bool = true;
-// Direction de l'EST dans le monde (la ou le soleil se leve). Si le MATIN ressemble au SOIR dans le jeu,
-// essaie une autre valeur : vec3f(1.0, 0.0, 0.0)  ou  vec3f(0.0, 0.0, 1.0)  ou  vec3f(0.0, 0.0, -1.0)
-const SUN_EAST: vec3f = vec3f(-1.0, 0.0, 0.0);
+// Direction de l'EST dans le monde (la ou le soleil se leve). Mesure sur le jeu : le soleil se leve cote +x.
+// Si un jour le MATIN ressemble au SOIR, mets vec3f(-1.0, 0.0, 0.0).
+const SUN_EAST: vec3f = vec3f(1.0, 0.0, 0.0);
 
 const LUMA: vec3f = vec3f(0.299, 0.587, 0.114);
 const LOOKS: i32 = 5;
@@ -110,8 +110,8 @@ fn clockPhase() -> f32 {
 const A_SUNRISE: f32 = 0.10;   // look Sunrise atteint
 const A_MORNING: f32 = 0.45;   // look Morning atteint
 const A_DAY: f32 = 1.25;       // look Day atteint (augmente pour retarder le plein midi)
-const A_DAY_END: f32 = 1.70;   // fin du plein jour, le fondu vers Sunset commence
-const A_SUNSET: f32 = 2.40;    // look Sunset atteint (diminue pour un soir plus tot)
+const A_DAY_END: f32 = 1.60;   // fin du plein jour, le fondu vers Sunset commence
+const A_SUNSET: f32 = 2.20;    // look Sunset atteint (diminue pour un soir plus tot)
 
 // Position dans le cycle d'apres le soleil du jeu.
 fn sunPhase(s: vec3f) -> f32 {
