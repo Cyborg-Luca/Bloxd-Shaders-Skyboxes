@@ -3,8 +3,8 @@ const SUN_COLOUR: vec3f = vec3f(0.60, 0.70, 1.00);
 const SKY_COLOUR: vec3f = vec3f(0.45, 0.55, 0.95);
 const WARM_COLOUR: vec3f = vec3f(0.75, 0.85, 1.10);
 const FOG_COLOUR: vec3f = vec3f(0.04, 0.07, 0.18);
-const WATER_COLOUR: vec3f = vec3f(0.04, 0.12, 0.35);
-const WATER_REFLECT: vec3f = vec3f(0.40, 0.50, 0.80);
+const WATER_COLOUR: vec3f = vec3f(0.03, 0.08, 0.22);
+const WATER_REFLECT: vec3f = vec3f(0.15, 0.20, 0.38);
 const LUMA: vec3f = vec3f(0.299, 0.587, 0.114);
 const SHADE_MIN: f32 = 0.6;
 const EXPOSURE: f32 = 0.5;
@@ -13,8 +13,8 @@ const SATURATION: f32 = 0.9;
 const FOG_MIX: f32 = 0.6;
 const BLOCK_BOOST: f32 = 0.6;
 const GLINT_POWER: f32 = 48.0;
-const GLINT_STRENGTH: f32 = 1.2;
-const GLARE_STRENGTH: f32 = 0.25;
+const GLINT_STRENGTH: f32 = 0.6;
+const GLARE_STRENGTH: f32 = 0.05;
 
 fn sunDir() -> vec3f {
     return normalize(SUN_RAW);

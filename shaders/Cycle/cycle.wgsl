@@ -1,6 +1,7 @@
 // ===== Day Cycle : Night -> Sunrise -> Morning -> Day -> Sunset -> Night =====
 // Regle ici la duree du cycle. Doit diviser 3600 (bloxdTimeWrap) pour que la boucle soit sans coupure :
 // 600 = 10 min, 900 = 15 min, 1200 = 20 min, 1800 = 30 min, 3600 = 1 h
+// POUR TESTER VITE : mets 60.0 (un tour complet en 1 minute, chaque ambiance dure ~12 s), puis remets 1200.0.
 const CYCLE_SECONDS: f32 = 1200.0;
 // Ambiance au demarrage du cycle : 0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset
 const START_LOOK: f32 = 3.0;
@@ -40,8 +41,8 @@ fn lookAt(i: i32) -> Look {
         case 0: {
             k = Look(
                 vec3f(0.30, 0.80, -0.50), vec3f(0.60, 0.70, 1.00), vec3f(0.45, 0.55, 0.95), vec3f(0.75, 0.85, 1.10),
-                vec3f(0.04, 0.07, 0.18), vec3f(0.04, 0.12, 0.35), vec3f(0.40, 0.50, 0.80),
-                0.60, 0.50, 0.15, 0.90, 0.60, 0.60, 48.0, 1.2, 0.25);
+                vec3f(0.04, 0.07, 0.18), vec3f(0.03, 0.08, 0.22), vec3f(0.15, 0.20, 0.38),
+                0.60, 0.50, 0.15, 0.90, 0.60, 0.60, 48.0, 0.6, 0.05);
         }
         // 1 : Sunrise
         case 1: {
