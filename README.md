@@ -43,6 +43,8 @@ tools/make_sky.py      script qui génère les skyboxes
 - `USE_GAME_SUN` : `true` par défaut, le shader suit le vrai soleil du jeu (`bloxdSunDirection()`) et reste synchro avec l'heure. Sans soleil dans le monde, il retombe sur l'horloge.
 - `SUN_EAST` : direction de l'est. Mesuré sur le jeu : le soleil se lève côté +x, donc `vec3f(1,0,0)`. Si un jour le matin ressemble au soir, mets `vec3f(-1,0,0)`.
 - `A_SUNRISE`, `A_MORNING`, `A_DAY`, `A_DAY_END`, `A_SUNSET` : angles du soleil (0 = lever, 1,57 = midi, 3,14 = coucher) qui règlent à quel moment de la journée chaque ambiance arrive (petit = plus tôt). `A_DAY` : le plein jour est atteint ; `A_DAY_END` : le fondu vers le soir commence ; `A_SUNSET` : le look Sunset est atteint.
+- `SHADOW_STRENGTH` : force des ombres sur les blocs (1 = normal, 0 = désactivées). `SHADOW_LEVEL_LOW` et `SHADOW_LEVEL_HIGH` règlent la taille des zones d'ombre (plus bas = ombres plus petites). `SHADOW_COLOUR` : couleur des ombres.
+- Les ombres viennent de la lumière du ciel : un bloc est plus sombre s'il ne voit pas le ciel (sous un arbre, sous un toit). Elles ne tournent pas avec le soleil.
 - Le shader ne change que le terrain et l'eau. Une skybox est fixe : elle ne change pas avec le cycle.
 
 ## Skyboxes
@@ -67,6 +69,7 @@ python tools/make_sky.py sortie Sunrise    # une seule
 
 - Shaders et skyboxes : Cyborg_Luca
 - Documentation de l'API shader : [GlitchHunterCoder/Bloxd-Essay](https://github.com/GlitchHunterCoder/Bloxd-Essay/tree/main/Shader)
+- Technique des ombres (lumière du ciel) : [Rshade Jumbo](https://github.com/imu31465/Bloxd.io-How-To-Make-Shader-Packs) de Rafer2163YT et le guide d'imu31465
 - Format des packs de textures : [bloxdy/texture-packs](https://github.com/bloxdy/texture-packs)
 
 ## Licence

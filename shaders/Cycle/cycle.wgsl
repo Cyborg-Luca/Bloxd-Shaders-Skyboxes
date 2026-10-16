@@ -5,6 +5,11 @@ const HOLD: f32 = 0.35;
 const USE_GAME_SUN: bool = true;
 const SUN_EAST: vec3f = vec3f(1.0, 0.0, 0.0);
 
+const SHADOW_STRENGTH: f32 = 1.0;
+const SHADOW_LEVEL_LOW: f32 = 13.6;
+const SHADOW_LEVEL_HIGH: f32 = 14.95;
+const SHADOW_COLOUR: vec3f = vec3f(0.60, 0.66, 0.84);
+
 const LUMA: vec3f = vec3f(0.299, 0.587, 0.114);
 const LOOKS: i32 = 5;
 
@@ -124,7 +129,25 @@ fn currentLook() -> Look {
     return k;
 }
 
-fn grade(s: BloxdSurface, l: BloxdLightIn, k: Look) -> vec3f {
+fn rawSkyLevel(encoded: f32) -> f32 {
+    let base = 1.0 - pow(max(1.0 - clamp(encoded, 0.0, 1.0), 0.0), 1.0 / 3.0);
+    return 45.0 * base / max(1.0 + 2.0 * base, 0.0001);
+}
+
+fn daylight() -> f32 {
+    let g = bloxdSunDirection();
+    if (dot(g, g) <= 0.25) {
+        return 1.0;
+    }
+    return smoothstep(-0.08, 0.18, g.y);
+}
+
+fn grade(s: BloxdSurface, l: BloxdLightIn, k: Look, shadowed: bool) -> vec3f {
+    var sunVis = 1.0;
+    if (shadowed) {
+        let seen = smoothstep(SHADOW_LEVEL_LOW, SHADOW_LEVEL_HIGH, rawSkyLevel(l.skyLight));
+        sunVis = mix(1.0, seen, daylight() * SHADOW_STRENGTH);
+    }
     let sun = normalize(k.sun);
     let facing = dot(l.normal, sun);
     let ndl = max(facing, 0.0);
@@ -134,11 +157,12 @@ fn grade(s: BloxdSurface, l: BloxdLightIn, k: Look) -> vec3f {
     let shade = mix(k.shadeMin, 1.0, clamp(facing * 1.45 + 0.3, 0.0, 1.0));
     var lit = l.litColour * tint * shade * k.exposure;
 
-    lit = lit + s.colour * k.sunColour * ndl * k.direct * l.skyLight;
+    lit = lit + s.colour * k.sunColour * ndl * k.direct * l.skyLight * sunVis;
     lit = lit + s.colour * (l.blockLight + l.heldLight) * k.blockBoost;
 
     let grey = dot(lit, LUMA);
     lit = mix(vec3f(grey), lit, k.saturation);
+    lit = lit * mix(SHADOW_COLOUR, vec3f(1.0), sunVis);
 
     let fogCol = mix(l.fogColour, k.fog, k.fogMix);
     let fogged = mix(fogCol, lit, l.fogVisibility);
@@ -148,7 +172,7 @@ fn grade(s: BloxdSurface, l: BloxdLightIn, k: Look) -> vec3f {
 
 fn bloxdTerrainLight(s: BloxdSurface, l: BloxdLightIn) -> BloxdLight {
     var result = bloxdDefaultLight(s, l);
-    result.colour = grade(s, l, currentLook());
+    result.colour = grade(s, l, currentLook(), true);
     return result;
 }
 
@@ -182,6 +206,6 @@ fn bloxdLiquidSurface(s: BloxdSurfaceIn) -> BloxdSurface {
 
 fn bloxdLiquidLight(s: BloxdSurface, l: BloxdLightIn) -> BloxdLight {
     var result = bloxdDefaultLight(s, l);
-    result.colour = grade(s, l, currentLook());
+    result.colour = grade(s, l, currentLook(), false);
     return result;
 }
