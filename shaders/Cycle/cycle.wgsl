@@ -104,18 +104,27 @@ fn clockPhase() -> f32 {
     return k + smoothstep(HOLD, 1.0 - HOLD, fract(q));
 }
 
+// Reglages du rythme de la journee, en angle du soleil depuis l'horizon est :
+// 0 = soleil a l'horizon est (lever), 1.57 = tout en haut (midi), 3.14 = horizon ouest (coucher).
+// Plus la valeur est PETITE, plus l'ambiance arrive TOT. Valeurs conseillees entre 0.0 et 3.14, dans l'ordre croissant.
+const A_SUNRISE: f32 = 0.10;   // look Sunrise atteint
+const A_MORNING: f32 = 0.45;   // look Morning atteint
+const A_DAY: f32 = 1.25;       // look Day atteint (augmente pour retarder le plein midi)
+const A_DAY_END: f32 = 1.70;   // fin du plein jour, le fondu vers Sunset commence
+const A_SUNSET: f32 = 2.40;    // look Sunset atteint (diminue pour un soir plus tot)
+
 // Position dans le cycle d'apres le soleil du jeu.
 fn sunPhase(s: vec3f) -> f32 {
     let a = atan2(s.y, dot(s, SUN_EAST));  // 0 = soleil a l'horizon est, pi/2 = zenith, +-pi = horizon ouest
     let pi = 3.14159265;
-    if (a < -pi + 0.35) { return 4.0 + (a + pi) / 0.35; }          // sunset -> night
-    if (a < -0.35)      { return 5.0; }                            // night
-    if (a < 0.10)       { return 5.0 + (a + 0.35) / 0.45; }        // night -> sunrise
-    if (a < 0.45)       { return 6.0 + (a - 0.10) / 0.35; }        // sunrise -> morning
-    if (a < 1.00)       { return 7.0 + (a - 0.45) / 0.55; }        // morning -> day
-    if (a < 2.10)       { return 8.0; }                            // day
-    if (a < 2.90)       { return 8.0 + (a - 2.10) / 0.80; }        // day -> sunset
-    return 9.0;                                                    // sunset
+    if (a < -pi + 0.35) { return 4.0 + (a + pi) / 0.35; }                                // sunset -> night
+    if (a < -0.35)      { return 5.0; }                                                  // night
+    if (a < A_SUNRISE)  { return 5.0 + (a + 0.35) / (A_SUNRISE + 0.35); }                // night -> sunrise
+    if (a < A_MORNING)  { return 6.0 + (a - A_SUNRISE) / (A_MORNING - A_SUNRISE); }      // sunrise -> morning
+    if (a < A_DAY)      { return 7.0 + (a - A_MORNING) / (A_DAY - A_MORNING); }          // morning -> day
+    if (a < A_DAY_END)  { return 8.0; }                                                  // day
+    if (a < A_SUNSET)   { return 8.0 + (a - A_DAY_END) / (A_SUNSET - A_DAY_END); }       // day -> sunset
+    return 9.0;                                                                          // sunset
 }
 
 fn currentLook() -> Look {
