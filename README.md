@@ -33,6 +33,10 @@ tools/make_sky.py      script qui génère les skyboxes
 - Chaque shader a sa direction et sa couleur de soleil (`SUN_RAW`, `SUN_COLOUR`), sa couleur de brouillard et son ombrage.
 - Un shader ne peut pas dessiner le ciel : l'API n'a pas de fonction pour ça. C'est pour ça qu'il y a des skyboxes à part.
 
+## Ombres
+
+Tous les shaders (Day, Morning, Sunrise, Sunset, Night et Cycle) ont des ombres sur les blocs, basées sur la lumière du ciel : un bloc est plus sombre et plus bleuté s'il ne voit pas le ciel. Les réglages `SHADOW_STRENGTH`, `SHADOW_LEVEL_LOW`, `SHADOW_LEVEL_HIGH` et `SHADOW_COLOUR` sont en haut de chaque fichier. Ces ombres ne tournent pas avec le soleil : l'API shader de Bloxd ne donne pas assez d'informations pour de vraies ombres directionnelles.
+
 ## Shader Cycle (tout en un)
 
 `shaders/Cycle/cycle.wgsl` enchaîne Night → Sunrise → Morning → Day → Sunset → Night en fondu, d'après `bloxdTime()`.

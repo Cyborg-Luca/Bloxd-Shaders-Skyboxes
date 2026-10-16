@@ -1,3 +1,21 @@
+const SHADOW_STRENGTH: f32 = 1.0;
+const SHADOW_LEVEL_LOW: f32 = 13.6;
+const SHADOW_LEVEL_HIGH: f32 = 14.95;
+const SHADOW_COLOUR: vec3f = vec3f(0.60, 0.66, 0.84);
+
+fn rawSkyLevel(encoded: f32) -> f32 {
+    let base = 1.0 - pow(max(1.0 - clamp(encoded, 0.0, 1.0), 0.0), 1.0 / 3.0);
+    return 45.0 * base / max(1.0 + 2.0 * base, 0.0001);
+}
+
+fn daylight() -> f32 {
+    let g = bloxdSunDirection();
+    if (dot(g, g) <= 0.25) {
+        return 1.0;
+    }
+    return smoothstep(-0.08, 0.18, g.y);
+}
+
 const SUN_RAW: vec3f = vec3f(0.35, 0.85, 0.40);
 const SUN_COLOUR: vec3f = vec3f(1.00, 0.96, 0.88);
 const SKY_COLOUR: vec3f = vec3f(0.82, 0.90, 1.00);
@@ -10,7 +28,12 @@ fn sunDir() -> vec3f {
     return normalize(SUN_RAW);
 }
 
-fn dayGrade(s: BloxdSurface, l: BloxdLightIn) -> vec3f {
+fn dayGrade(s: BloxdSurface, l: BloxdLightIn, shadowed: bool) -> vec3f {
+    var sunVis = 1.0;
+    if (shadowed) {
+        let seen = smoothstep(SHADOW_LEVEL_LOW, SHADOW_LEVEL_HIGH, rawSkyLevel(l.skyLight));
+        sunVis = mix(1.0, seen, daylight() * SHADOW_STRENGTH);
+    }
     let sun = sunDir();
     let facing = dot(l.normal, sun);
     let ndl = max(facing, 0.0);
@@ -22,12 +45,14 @@ fn dayGrade(s: BloxdSurface, l: BloxdLightIn) -> vec3f {
     let shade = mix(0.55, 1.0, clamp(facing * 1.4 + 0.3, 0.0, 1.0));
     lit = lit * shade;
 
-    lit = lit + s.colour * SUN_COLOUR * ndl * 0.25 * l.skyLight;
+    lit = lit + s.colour * SUN_COLOUR * ndl * 0.25 * l.skyLight * sunVis;
 
     lit = lit + s.colour * (l.blockLight + l.heldLight) * 0.3;
 
     let grey = dot(lit, LUMA);
     lit = mix(vec3f(grey), lit, 1.15);
+
+    lit = lit * mix(SHADOW_COLOUR, vec3f(1.0), sunVis);
 
     let fogCol = mix(l.fogColour, FOG_COLOUR, 0.3);
     let fogged = mix(fogCol, lit, l.fogVisibility);
@@ -37,7 +62,7 @@ fn dayGrade(s: BloxdSurface, l: BloxdLightIn) -> vec3f {
 
 fn bloxdTerrainLight(s: BloxdSurface, l: BloxdLightIn) -> BloxdLight {
     var result = bloxdDefaultLight(s, l);
-    result.colour = dayGrade(s, l);
+    result.colour = dayGrade(s, l, true);
     return result;
 }
 
@@ -70,6 +95,6 @@ fn bloxdLiquidSurface(s: BloxdSurfaceIn) -> BloxdSurface {
 
 fn bloxdLiquidLight(s: BloxdSurface, l: BloxdLightIn) -> BloxdLight {
     var result = bloxdDefaultLight(s, l);
-    result.colour = dayGrade(s, l);
+    result.colour = dayGrade(s, l, false);
     return result;
 }
