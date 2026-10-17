@@ -84,10 +84,6 @@ python tools/make_sky.py sortie            # les 5 skyboxes
 python tools/make_sky.py sortie Sunrise    # une seule
 ```
 
-## Installation
-
-> À compléter : comment charger un pack de shader et une skybox dans Bloxd.
-
 ## Licence
 
 MIT, voir [LICENSE](LICENSE).
