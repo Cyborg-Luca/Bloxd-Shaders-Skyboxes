@@ -35,7 +35,27 @@ tools/make_sky.py      script qui génère les skyboxes
 
 ## Ombres
 
-Tous les shaders (Day, Morning, Sunrise, Sunset, Night et Cycle) ont des ombres sur les blocs, basées sur la lumière du ciel : un bloc est plus sombre et plus bleuté s'il ne voit pas le ciel. Les réglages `SHADOW_STRENGTH`, `SHADOW_LEVEL_LOW`, `SHADOW_LEVEL_HIGH` et `SHADOW_COLOUR` sont en haut de chaque fichier. Ces ombres ne tournent pas avec le soleil : l'API shader de Bloxd ne donne pas assez d'informations pour de vraies ombres directionnelles.
+Tous les shaders (Day, Morning, Sunrise, Sunset, Night et Cycle) ont des ombres sur les blocs :
+
+- **Ombre du ciel** : un bloc est plus sombre et teinté s'il ne voit pas le ciel (sous un arbre, sous un toit). Elle vient de `skyLight`.
+- **Côté sombre des blocs** : la face de chaque bloc tournée à l'opposé du soleil est assombrie, sur tous les blocs, même un cube posé au sol.
+
+Réglages en haut de chaque fichier :
+
+- `SHADOW_STRENGTH` : force des ombres (1 = normal, 0 = désactivées).
+- `SHADOW_LEVEL_SHIFT` : taille des ombres du ciel (plus = plus grandes, moins = plus petites).
+- `FACE_SHADOW` : côté sombre des blocs (1 = normal, 0 = désactivé).
+- `SH_STRENGTH`, `SH_LOW`, `SH_HIGH`, `SH_COLOUR` : force, taille et couleur des ombres propres à l'ambiance (dans Cycle, ces 4 valeurs sont à la fin de chaque look dans `lookAt`).
+
+Limites : l'API shader de Bloxd ne donne ni les blocs voisins ni de shadow map, donc pas d'ombres projetées sur le sol. L'ombre sous un arbre ne tourne pas avec le soleil ; seul le côté sombre des blocs le suit. Dans Day, Morning, Sunrise, Sunset et Night le soleil est fixe ; dans Cycle, la taille, la force et la couleur des ombres changent avec l'heure (grandes et colorées au lever et au coucher, petites à midi, faibles la nuit).
+
+## Reflets
+
+Tous les shaders ajoutent un reflet du soleil sur les blocs : un éclat visible quand on regarde vers le soleil, plus fort quand il est bas, absent dans l'ombre.
+
+- `BLOCK_SHINE` : force des reflets (0 = désactivés, 0,5 = très brillant).
+- `BLOCK_SHINE_POWER` : taille du reflet (petit = large et doux, grand = petit point net).
+- `SHINE_DIRECT` (sauf Cycle) : sensibilité à la lumière directe de l'ambiance.
 
 ## Shader Cycle (tout en un)
 
@@ -47,8 +67,7 @@ Tous les shaders (Day, Morning, Sunrise, Sunset, Night et Cycle) ont des ombres 
 - `USE_GAME_SUN` : `true` par défaut, le shader suit le vrai soleil du jeu (`bloxdSunDirection()`) et reste synchro avec l'heure. Sans soleil dans le monde, il retombe sur l'horloge.
 - `SUN_EAST` : direction de l'est. Mesuré sur le jeu : le soleil se lève côté +x, donc `vec3f(1,0,0)`. Si un jour le matin ressemble au soir, mets `vec3f(-1,0,0)`.
 - `A_SUNRISE`, `A_MORNING`, `A_DAY`, `A_DAY_END`, `A_SUNSET` : angles du soleil (0 = lever, 1,57 = midi, 3,14 = coucher) qui règlent à quel moment de la journée chaque ambiance arrive (petit = plus tôt). `A_DAY` : le plein jour est atteint ; `A_DAY_END` : le fondu vers le soir commence ; `A_SUNSET` : le look Sunset est atteint.
-- `SHADOW_STRENGTH` : force des ombres sur les blocs (1 = normal, 0 = désactivées). `SHADOW_LEVEL_LOW` et `SHADOW_LEVEL_HIGH` règlent la taille des zones d'ombre (plus bas = ombres plus petites). `SHADOW_COLOUR` : couleur des ombres.
-- Les ombres viennent de la lumière du ciel : un bloc est plus sombre s'il ne voit pas le ciel (sous un arbre, sous un toit). Elles ne tournent pas avec le soleil.
+- `SHADOW_STRENGTH`, `SHADOW_LEVEL_SHIFT`, `FACE_SHADOW`, `BLOCK_SHINE`, `BLOCK_SHINE_POWER` : ombres et reflets (voir plus haut). La taille, la force et la couleur des ombres de chaque ambiance sont dans `lookAt` et se fondent d'une ambiance à l'autre.
 - Le shader ne change que le terrain et l'eau. Une skybox est fixe : elle ne change pas avec le cycle.
 
 ## Skyboxes
@@ -68,13 +87,6 @@ python tools/make_sky.py sortie Sunrise    # une seule
 ## Installation
 
 > À compléter : comment charger un pack de shader et une skybox dans Bloxd.
-
-## Crédits
-
-- Shaders et skyboxes : Cyborg_Luca
-- Documentation de l'API shader : [GlitchHunterCoder/Bloxd-Essay](https://github.com/GlitchHunterCoder/Bloxd-Essay/tree/main/Shader)
-- Technique des ombres (lumière du ciel) : [Rshade Jumbo](https://github.com/imu31465/Bloxd.io-How-To-Make-Shader-Packs) de Rafer2163YT et le guide d'imu31465
-- Format des packs de textures : [bloxdy/texture-packs](https://github.com/bloxdy/texture-packs)
 
 ## Licence
 
