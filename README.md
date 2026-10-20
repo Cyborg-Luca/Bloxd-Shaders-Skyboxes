@@ -1,89 +1,128 @@
 # Bloxd Shaders & Skyboxes
 
-Shaders (WGSL) et skyboxes pour **Bloxd.io**, par **Cyborg_Luca**.
-*Shaders (WGSL) and skyboxes for Bloxd.io, by Cyborg_Luca.*
+Shaders (WGSL) and skyboxes for **Bloxd.io**, by **Cyborg_Luca**.
 
-Cinq ambiances, chacune avec un shader et une skybox assortie :
+Five moods, each with a shader and a matching skybox:
 
-| Ambiance | Shader | Skybox | Aperçu de l'horizon |
+| Mood | Shader | Skybox | Horizon preview |
 |---|---|---|---|
-| **Day** – jour lumineux | `shaders/Day` | `skyboxes/Day` | ![Day](previews/Day.png) |
-| **Morning** – matin frais, rose-pêche | `shaders/Morning` | `skyboxes/Morning` | ![Morning](previews/Morning.png) |
-| **Sunrise** – lever de soleil doré | `shaders/Sunrise` | `skyboxes/Sunrise` | ![Sunrise](previews/Sunrise.png) |
-| **Sunset** – coucher de soleil orange | `shaders/Sunset` | `skyboxes/Sunset` | ![Sunset](previews/Sunset.png) |
-| **Night** – nuit au clair de lune | `shaders/Night` | `skyboxes/Night` | ![Night](previews/Night.png) |
-| **Cycle** – les 5 ambiances en un seul shader | `shaders/Cycle` | (aucune, voir plus bas) | |
+| **Day** – bright daylight | `shaders/Day` | `skyboxes/Day` | ![Day](previews/Day.png) |
+| **Morning** – fresh morning, peach-pink | `shaders/Morning` | `skyboxes/Morning` | ![Morning](previews/Morning.png) |
+| **Sunrise** – golden sunrise | `shaders/Sunrise` | `skyboxes/Sunrise` | ![Sunrise](previews/Sunrise.png) |
+| **Sunset** – orange sunset | `shaders/Sunset` | `skyboxes/Sunset` | ![Sunset](previews/Sunset.png) |
+| **Night** – moonlit night | `shaders/Night` | `skyboxes/Night` | ![Night](previews/Night.png) |
+| **Cycle** – all 5 moods in a single shader | `shaders/Cycle` | (none, see below) | |
 
-## Contenu
+## Contents
 
 ```
-shaders/<Ambiance>/
+shaders/<Mood>/
     pack.json          (apiVersion 2)
-    <ambiance>.wgsl
-skyboxes/<Ambiance>/skyBoxes/default/
+    core.wgsl          light, colours, shadows        (required)
+    reflections.wgsl   sun reflections on blocks      (required)
+    water.wgsl         water                          (optional)
+    lava.wgsl          lava                           (optional)
+    leaves.wgsl        swaying leaves                 (optional)
+skyboxes/<Mood>/skyBoxes/default/
     px.jpg nx.jpg py.jpg ny.jpg pz.jpg nz.jpg     (1024x1024)
-previews/              aperçus de l'horizon de chaque skybox
-tools/make_sky.py      script qui génère les skyboxes
+previews/              horizon preview of each skybox
+tools/make_sky.py      script that generates the skyboxes
 ```
 
 ## Shaders
 
-- Format : API shader Bloxd **version 2** (`apiVersion: 2`), écrits en WGSL.
-- Ils modifient le terrain (`bloxdTerrainLight`) et l'eau (`bloxdLiquidSurface`, `bloxdLiquidLight`).
-- Chaque shader a sa direction et sa couleur de soleil (`SUN_RAW`, `SUN_COLOUR`), sa couleur de brouillard et son ombrage.
-- Un shader ne peut pas dessiner le ciel : l'API n'a pas de fonction pour ça. C'est pour ça qu'il y a des skyboxes à part.
+- Format: Bloxd shader API **version 2** (`apiVersion: 2`), written in WGSL.
+- They modify the terrain light (`bloxdTerrainLight`), the water (`bloxdLiquidSurface`, `bloxdLiquidLight`), the lava (`bloxdTerrainSurface`) and the leaves (`bloxdTerrainVertex`).
+- Each shader has its own sun direction and colour (`SUN_RAW`, `SUN_COLOUR`), fog colour and shading.
+- A shader cannot draw the sky: the API has no function for it. That is why the skyboxes are separate.
 
-## Ombres
+### Files and what you can remove
 
-Tous les shaders (Day, Morning, Sunrise, Sunset, Night et Cycle) ont des ombres sur les blocs :
+Bloxd joins all `.wgsl` files of a pack into one module, in an unspecified order, and each hook can only be defined once. So every optional file defines its own hook and depends on nothing but `core.wgsl`.
 
-- **Ombre du ciel** : un bloc est plus sombre et teinté s'il ne voit pas le ciel (sous un arbre, sous un toit). Elle vient de `skyLight`.
-- **Côté sombre des blocs** : la face de chaque bloc tournée à l'opposé du soleil est assombrie, sur tous les blocs, même un cube posé au sol.
+| File | Content | Can be deleted? |
+|---|---|---|
+| `core.wgsl` | light, colours, fog, shadows | No |
+| `reflections.wgsl` | sun reflections on blocks | No (set `BLOCK_SHINE` to `0.0` to turn them off) |
+| `water.wgsl` | water colour, ripples, sun glint | Yes: water falls back to the normal terrain look |
+| `lava.wgsl` | animated glowing lava | Yes: lava keeps its normal texture |
+| `leaves.wgsl` | swaying leaves | Yes: leaves stay still |
 
-Réglages en haut de chaque fichier :
+Shadows live in `core.wgsl` and share the same light hook as the rest, so they cannot be deleted either: set `SHADOW_STRENGTH` to `0.0` instead.
 
-- `SHADOW_STRENGTH` : force des ombres (1 = normal, 0 = désactivées).
-- `SHADOW_LEVEL_SHIFT` : taille des ombres du ciel (plus = plus grandes, moins = plus petites).
-- `FACE_SHADOW` : côté sombre des blocs (1 = normal, 0 = désactivé).
-- `SH_STRENGTH`, `SH_LOW`, `SH_HIGH`, `SH_COLOUR` : force, taille et couleur des ombres propres à l'ambiance (dans Cycle, ces 4 valeurs sont à la fin de chaque look dans `lookAt`).
+To remove a module, delete its file from the pack and load the pack again in Settings → Shader Pack.
 
-Limites : l'API shader de Bloxd ne donne ni les blocs voisins ni de shadow map, donc pas d'ombres projetées sur le sol. L'ombre sous un arbre ne tourne pas avec le soleil ; seul le côté sombre des blocs le suit. Dans Day, Morning, Sunrise, Sunset et Night le soleil est fixe ; dans Cycle, la taille, la force et la couleur des ombres changent avec l'heure (grandes et colorées au lever et au coucher, petites à midi, faibles la nuit).
+## Shadows
 
-## Reflets
+All shaders (Day, Morning, Sunrise, Sunset, Night and Cycle) add shadows to blocks:
 
-Tous les shaders ajoutent un reflet du soleil sur les blocs : un éclat visible quand on regarde vers le soleil, plus fort quand il est bas, absent dans l'ombre.
+- **Sky shadow**: a block is darker and tinted when it cannot see the sky (under a tree, under a roof). It comes from `skyLight`.
+- **Dark side of blocks**: the face of each block turned away from the sun is darkened, on every block, even a cube sitting on the ground.
 
-- `BLOCK_SHINE` : force des reflets (0 = désactivés, 0,5 = très brillant).
-- `BLOCK_SHINE_POWER` : taille du reflet (petit = large et doux, grand = petit point net).
-- `SHINE_DIRECT` (sauf Cycle) : sensibilité à la lumière directe de l'ambiance.
+Settings at the top of `core.wgsl`:
 
-## Shader Cycle (tout en un)
+- `SHADOW_STRENGTH`: shadow strength (1 = normal, 0 = disabled).
+- `SHADOW_LEVEL_SHIFT`: size of the sky shadows (higher = larger, lower = smaller).
+- `FACE_SHADOW`: dark side of blocks (1 = normal, 0 = disabled).
+- `SH_STRENGTH`, `SH_LOW`, `SH_HIGH`, `SH_COLOUR`: strength, size and colour of the shadows specific to each mood (in Cycle, these 4 values are at the end of each look in `lookAt`).
 
-`shaders/Cycle/cycle.wgsl` enchaîne Night → Sunrise → Morning → Day → Sunset → Night en fondu, d'après `bloxdTime()`.
+Limits: the Bloxd shader API provides neither neighbouring blocks nor a shadow map, so there are no cast shadows on the ground. The shadow under a tree does not rotate with the sun; only the dark side of blocks follows it. In Day, Morning, Sunrise, Sunset and Night the sun is fixed; in Cycle, the size, strength and colour of the shadows change with the time of day (large and coloured at sunrise and sunset, small at noon, faint at night).
 
-- `CYCLE_SECONDS` : durée d'un cycle complet (doit diviser 3600 : 600, 900, 1200, 1800, 3600).
-- `START_LOOK` : ambiance au démarrage (0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset).
-- `HOLD` : durée de chaque ambiance avant de passer à la suivante.
-- `USE_GAME_SUN` : `true` par défaut, le shader suit le vrai soleil du jeu (`bloxdSunDirection()`) et reste synchro avec l'heure. Sans soleil dans le monde, il retombe sur l'horloge.
-- `SUN_EAST` : direction de l'est. Mesuré sur le jeu : le soleil se lève côté +x, donc `vec3f(1,0,0)`. Si un jour le matin ressemble au soir, mets `vec3f(-1,0,0)`.
-- `A_SUNRISE`, `A_MORNING`, `A_DAY`, `A_DAY_END`, `A_SUNSET` : angles du soleil (0 = lever, 1,57 = midi, 3,14 = coucher) qui règlent à quel moment de la journée chaque ambiance arrive (petit = plus tôt). `A_DAY` : le plein jour est atteint ; `A_DAY_END` : le fondu vers le soir commence ; `A_SUNSET` : le look Sunset est atteint.
-- `SHADOW_STRENGTH`, `SHADOW_LEVEL_SHIFT`, `FACE_SHADOW`, `BLOCK_SHINE`, `BLOCK_SHINE_POWER` : ombres et reflets (voir plus haut). La taille, la force et la couleur des ombres de chaque ambiance sont dans `lookAt` et se fondent d'une ambiance à l'autre.
-- Le shader ne change que le terrain et l'eau. Une skybox est fixe : elle ne change pas avec le cycle.
+## Reflections
+
+All shaders add a sun reflection on blocks: a glint visible when looking towards the sun, stronger when the sun is low, absent in shadow. Settings are at the top of `reflections.wgsl`:
+
+- `BLOCK_SHINE`: reflection strength (0 = disabled, 0.5 = very shiny).
+- `BLOCK_SHINE_POWER`: reflection size (small = wide and soft, large = small sharp dot).
+- `SHINE_DIRECT` (except Cycle): sensitivity to the mood's direct light.
+
+## Water
+
+`water.wgsl` keeps the water light and simple: a mood-specific colour (`WATER_COLOUR`, `WATER_REFLECT`), small moving ripples, a Fresnel edge and a sun glint on the surface. The water shape itself does not change: vertex waves were tried but Bloxd merges water faces, which leaves black cracks between them.
+
+## Lava
+
+`lava.wgsl` replaces the lava texture (block id `1491`) with a moving, glowing flow in the terrain surface hook.
+
+- `LAVA_HOT`, `LAVA_DARK`: bright and dark lava colours.
+- `LAVA_GLOW`: how strongly the lava glows. It is higher at night and lower at noon: Night 1.6, Sunset 1.2, Sunrise 1.1, Morning 0.9, Day 0.7. In Cycle it blends with the current mood (`lavaGlow` in each look of `lookAt`).
+
+## Swaying leaves
+
+`leaves.wgsl` makes leaves sway gently, as if there were a light wind. It moves the leaf vertices in the vertex hook, for the 33 leaf block ids (including the `|TreeCanopy` variants used by generated trees).
+
+- `LEAF_SWAY`: how far the leaves move (0.07 by default; higher = stronger wind).
+- `LEAF_WIND_DIR`: wind direction on the ground plane (x, z).
+
+Limit: vertex hooks are not allowed in "strict" games. In a strict world Bloxd turns the whole shader pack off ("Your shader pack is off in this game"). The code is wrapped in `#ifndef BLOXD_STRICT`, but the pack is still disabled there. Delete `leaves.wgsl` to use the pack in strict worlds.
+
+## Cycle shader (all-in-one)
+
+`shaders/Cycle/core.wgsl` fades Night → Sunrise → Morning → Day → Sunset → Night, based on `bloxdTime()`.
+
+- `CYCLE_SECONDS`: length of a full cycle (must divide 3600: 600, 900, 1200, 1800, 3600).
+- `START_LOOK`: mood at start-up (0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset).
+- `HOLD`: how long each mood lasts before moving to the next.
+- `USE_GAME_SUN`: `true` by default, the shader follows the game's real sun (`bloxdSunDirection()`) and stays in sync with the time of day. If the world has no sun, it falls back to the clock.
+- `SUN_EAST`: direction of east. Measured in-game: the sun rises on the +x side, so `vec3f(1,0,0)`. If morning ever looks like evening, use `vec3f(-1,0,0)`.
+- `A_SUNRISE`, `A_MORNING`, `A_DAY`, `A_DAY_END`, `A_SUNSET`: sun angles (0 = sunrise, 1.57 = noon, 3.14 = sunset) that set when each mood arrives during the day (smaller = earlier). `A_DAY`: full daylight is reached; `A_DAY_END`: the fade towards evening begins; `A_SUNSET`: the Sunset look is reached.
+- `SHADOW_STRENGTH`, `SHADOW_LEVEL_SHIFT`, `FACE_SHADOW` (in `core.wgsl`), `BLOCK_SHINE`, `BLOCK_SHINE_POWER` (in `reflections.wgsl`): shadows and reflections (see above). The size, strength and colour of each mood's shadows are in `lookAt` and blend from one mood to the next.
+- The shader changes the terrain, the water, the lava and the leaves. A skybox is fixed: it does not change with the cycle.
 
 ## Skyboxes
 
-- Format Bloxd : six faces `.jpg` dans `skyBoxes/<nom>/` (`px`, `nx`, `py`, `ny`, `pz`, `nz`), comme dans [bloxdy/texture-packs](https://github.com/bloxdy/texture-packs).
-- L'orientation des faces a été vérifiée sur la skybox par défaut du jeu (raccord des bords entre les faces).
-- Chaque skybox reprend les couleurs et la direction du soleil (ou de la lune pour Night) de son shader.
-- Le soleil est fixe dans l'image : il ne suit pas le temps du jeu.
-- Les images sont générées par `tools/make_sky.py` (Python, `numpy` et `Pillow`) :
+- Bloxd format: six `.jpg` faces in `skyBoxes/<name>/` (`px`, `nx`, `py`, `ny`, `pz`, `nz`), as in [bloxdy/texture-packs](https://github.com/bloxdy/texture-packs).
+- The face orientation was checked against the game's default skybox (edges line up between faces).
+- Each skybox uses the colours and the sun direction (or the moon for Night) of its shader.
+- The sun is fixed in the image: it does not follow the game's time.
+- The images are generated by `tools/make_sky.py` (Python, `numpy` and `Pillow`):
 
 ```bash
 pip install numpy pillow
-python tools/make_sky.py sortie            # les 5 skyboxes
-python tools/make_sky.py sortie Sunrise    # une seule
+python tools/make_sky.py output            # all 5 skyboxes
+python tools/make_sky.py output Sunrise    # just one
 ```
 
-## Licence
+## License
 
-MIT, voir [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
