@@ -5,8 +5,6 @@ from PIL import Image
 N = 1024
 OUT = sys.argv[1]
 
-# ---- Bloxd cubemap layout (verified against the default skybox edge continuity) ----
-# u = right (-1..1), v = down (-1..1) inside each face image.
 def face_dirs(face):
     u, v = np.meshgrid(np.linspace(-1, 1, N), np.linspace(-1, 1, N))
     one = np.ones_like(u)
@@ -19,7 +17,6 @@ def face_dirs(face):
     d = np.stack(d, -1)
     return d / np.linalg.norm(d, axis=-1, keepdims=True)
 
-# ---- noise ----
 def hash3(i, j, k, seed):
     h = (i * 374761393 + j * 668265263 + k * 2147483647 + seed * 1274126177) & 0xFFFFFFFF
     h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
@@ -83,7 +80,6 @@ def render(face, T):
     sunc = np.array(T['sun_col'])
     zen, mid, hor = map(np.array, (T['zenith'], T['mid'], T['horizon']))
 
-    # vertical gradient (horizon -> mid -> zenith); below horizon = horizon colour so fog blends in
     e = np.clip(y, 0, 1)
     col = mix(np.broadcast_to(hor, d.shape).copy(), np.broadcast_to(mid, d.shape).copy(), smooth(0.0, 0.25, e) ** 0.8)
     col = mix(col, np.broadcast_to(zen, d.shape).copy(), smooth(0.2, 0.95, e) ** 0.9)
@@ -92,11 +88,9 @@ def render(face, T):
 
     cs = np.clip((d * sun).sum(-1), -1, 1)
 
-    # sun / moon glow + disc
     glow = (np.exp(-(1 - cs) * 9) * 0.55 + np.exp(-(1 - cs) * 60) * 0.9) * T['glow']
     col = col + glow[..., None] * sunc * (0.6 if T['stars'] else 1.0)
 
-    # stars (night)
     if T['stars'] > 0:
         g = d * 180.0
         gi = np.floor(g).astype(np.int64)
@@ -105,16 +99,14 @@ def render(face, T):
         dist = np.linalg.norm(fr, axis=-1)
         star = (h > 0.985) * np.clip(1 - dist * 2.4, 0, 1) ** 2 * (0.5 + 0.8 * hash3(gi[..., 0], gi[..., 1], gi[..., 2], 9))
         col = col + (star * smooth(-0.02, 0.15, y))[..., None] * np.array([0.9, 0.95, 1.0])
-        # faint milky band
         band = fbm(d * 3.0 + 5, 4, 3)
         mw = np.exp(-((d * np.array([0.4, 0.2, 0.9])).sum(-1) ** 2) * 14) * band
         col = col + (mw * 0.12 * smooth(0.0, 0.2, y))[..., None] * np.array([0.5, 0.6, 1.0])
 
-    # clouds (layer projected on a plane above the player)
     h_ = np.clip(y, 0.0, 1) + 0.12
     p = np.stack([d[..., 0] / h_, d[..., 2] / h_, np.full_like(h_, 3.0)], -1) * 1.6
     dens = fbm(p + T['seed'], 6, T['seed'])
-    dens2 = fbm(p + T['seed'] + sun[[0, 2, 1]] * 0.25, 6, T['seed'])  # toward the sun, for lighting
+    dens2 = fbm(p + T['seed'] + sun[[0, 2, 1]] * 0.25, 6, T['seed'])
     c = smooth(T['cover'], T['cover'] + 0.22, dens)
     c = c * smooth(0.0, 0.10, y) * (1 - 0.0 * y)
     light = np.clip(0.55 + (dens - dens2) * 5.0, 0, 1)
@@ -123,14 +115,12 @@ def render(face, T):
     ccol = ccol + (np.exp(-(1 - cs) * 14) * T['glow'] * 0.5)[..., None] * sunc * 0.6
     col = mix(col, ccol, c * 0.95)
 
-    # sun/moon disc on top (clouds can slightly cover it)
     disc = smooth(0.99935 if T['stars'] == 0 else 0.9992, 0.9997, cs)
     discc = np.array([1.0, 0.98, 0.92]) if T['stars'] == 0 else np.array([0.88, 0.92, 1.0])
     if T['stars'] == 0:
         discc = np.minimum(1.0, sunc * 0.5 + 0.6)
     col = mix(col, np.broadcast_to(discc, d.shape).copy(), disc * (1 - c * 0.6))
 
-    # soften toward horizon haze
     haze = np.exp(-np.abs(y) * 9) * 0.35
     col = mix(col, np.broadcast_to(hor, d.shape).copy(), haze * (0.7 if T['stars'] else 1.0))
 
