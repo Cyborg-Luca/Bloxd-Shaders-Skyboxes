@@ -3,7 +3,7 @@ const WATER_REFLECT: vec3f = vec3f(0.95, 0.45, 0.30);
 fn bloxdLiquidSurface(s: BloxdSurfaceIn) -> BloxdSurface {
     var result = bloxdDefaultSurface(s);
     let w = bloxdWorldPosition(s.position);
-    let t = bloxdTime();
+    let t = packTime();
 
     let ripple = vec3f(sin(w.x * 2.0 + t * 1.5) * 0.08, 0.0, cos(w.z * 2.3 + t * 1.2) * 0.08);
     let n = normalize(s.normal + ripple);

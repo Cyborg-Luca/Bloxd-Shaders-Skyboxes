@@ -1,3 +1,9 @@
+const TIME_WRAP: f32 = 3600.0;
+
+fn packTime() -> f32 {
+    return bloxdSeconds() % TIME_WRAP;
+}
+
 const SHADOW_STRENGTH: f32 = 1.0;
 const SHADOW_LEVEL_SHIFT: f32 = 0.0;
 const FACE_SHADOW: f32 = 1.0;

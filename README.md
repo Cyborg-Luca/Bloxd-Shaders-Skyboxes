@@ -125,4 +125,4 @@ python tools/make_sky.py output Sunrise    # just one
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).

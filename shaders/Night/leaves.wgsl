@@ -4,27 +4,20 @@ const LEAF_WIND_DIR: vec2f = vec2f(0.80, 0.60);
 const TAU: f32 = 6.2831853;
 
 fn sf(freq: f32) -> f32 {
-    let k = max(round(freq * bloxdTimeWrap / TAU), 1.0);
-    return k * TAU / bloxdTimeWrap;
+    let k = max(round(freq * TIME_WRAP / TAU), 1.0);
+    return k * TAU / TIME_WRAP;
 }
 
-fn isLeaf(id: u32) -> bool {
-    switch id {
-        case 100u, 491u, 493u, 911u, 102u, 492u, 101u, 2021u, 2020u, 1636u, 2019u, 2085u, 1226u, 653u, 103u, 1969u, 2023u, 2022u, 2025u, 2024u, 208u, 209u, 210u, 211u, 494u, 495u, 496u, 654u, 938u, 1259u, 1663u, 1996u, 2086u: {
-            return true;
-        }
-        default: {
-            return false;
-        }
-    }
+fn isLeaf(flags: u32) -> bool {
+    return (flags & bloxdBlockFlagVegetation) != 0u && (flags & bloxdBlockFlagDirt) == 0u;
 }
 
 #ifndef BLOXD_STRICT
 fn bloxdTerrainVertex(v: BloxdVertexIn) -> BloxdVertex {
     var result = bloxdDefaultVertex(v);
-    if (isLeaf(v.blockId)) {
+    if (isLeaf(v.blockFlags)) {
         let w = bloxdWorldPosition(v.position);
-        let t = bloxdTime();
+        let t = packTime();
         let along = dot(w.xz, LEAF_WIND_DIR);
         let wave = sin(along * 0.10 - t * sf(1.1));
         let flutter = sin(t * sf(2.3) + w.x * 1.3 + w.y * 0.9 + w.z * 1.1);

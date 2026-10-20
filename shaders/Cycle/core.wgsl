@@ -1,3 +1,9 @@
+const TIME_WRAP: f32 = 3600.0;
+
+fn packTime() -> f32 {
+    return bloxdSeconds() % TIME_WRAP;
+}
+
 const CYCLE_SECONDS: f32 = 1200.0;
 const START_LOOK: f32 = 3.0;
 const HOLD: f32 = 0.35;
@@ -8,7 +14,6 @@ const SUN_EAST: vec3f = vec3f(1.0, 0.0, 0.0);
 const SHADOW_STRENGTH: f32 = 1.0;
 const SHADOW_LEVEL_SHIFT: f32 = 0.0;
 const FACE_SHADOW: f32 = 1.0;
-
 
 const LUMA: vec3f = vec3f(0.299, 0.587, 0.114);
 const LOOKS: i32 = 5;
@@ -98,7 +103,7 @@ fn lookBlend(p: f32) -> Look {
 }
 
 fn clockPhase() -> f32 {
-    let q = bloxdTime() / CYCLE_SECONDS * f32(LOOKS) + START_LOOK;
+    let q = packTime() / CYCLE_SECONDS * f32(LOOKS) + START_LOOK;
     let k = floor(q);
     return k + smoothstep(HOLD, 1.0 - HOLD, fract(q));
 }

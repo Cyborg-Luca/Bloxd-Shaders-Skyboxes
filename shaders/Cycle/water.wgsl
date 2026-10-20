@@ -2,7 +2,7 @@ fn bloxdLiquidSurface(s: BloxdSurfaceIn) -> BloxdSurface {
     let k = currentLook();
     var result = bloxdDefaultSurface(s);
     let w = bloxdWorldPosition(s.position);
-    let t = bloxdTime();
+    let t = packTime();
 
     let ripple = vec3f(
         sin(w.x * 2.0 + t * 1.5) * 0.08 + sin(w.z * 4.1 - t * 2.3) * 0.04,
