@@ -17,7 +17,7 @@ Five moods, each with a shader and a matching skybox:
 
 ```
 shaders/<Mood>/
-    pack.json          (apiVersion 2)
+    pack.json          (apiVersion 3)
     core.wgsl          light, colours, shadows        (required)
     reflections.wgsl   sun reflections on blocks      (required)
     water.wgsl         water                          (optional)
@@ -31,7 +31,7 @@ tools/make_sky.py      script that generates the skyboxes
 
 ## Shaders
 
-- Format: Bloxd shader API **version 2** (`apiVersion: 2`), written in WGSL.
+- Format: Bloxd shader API **version 3** (`apiVersion: 3`), written in WGSL.
 - They modify the terrain light (`bloxdTerrainLight`), the water (`bloxdLiquidSurface`, `bloxdLiquidLight`), the lava (`bloxdTerrainSurface`) and the leaves (`bloxdTerrainVertex`).
 - Each shader has its own sun direction and colour (`SUN_RAW`, `SUN_COLOUR`), fog colour and shading.
 - A shader cannot draw the sky: the API has no function for it. That is why the skyboxes are separate.
@@ -82,14 +82,14 @@ All shaders add a sun reflection on blocks: a glint visible when looking towards
 
 ## Lava
 
-`lava.wgsl` replaces the lava texture (block id `1491`) with a moving, glowing flow in the terrain surface hook.
+`lava.wgsl` replaces the lava texture with a moving, glowing flow in the terrain surface hook. Since API v3 there are no block ids: lava is recognised by its flags (emissive and not opaque).
 
 - `LAVA_HOT`, `LAVA_DARK`: bright and dark lava colours.
 - `LAVA_GLOW`: how strongly the lava glows. It is higher at night and lower at noon: Night 1.6, Sunset 1.2, Sunrise 1.1, Morning 0.9, Day 0.7. In Cycle it blends with the current mood (`lavaGlow` in each look of `lookAt`).
 
 ## Swaying leaves
 
-`leaves.wgsl` makes leaves sway gently, as if there were a light wind. It moves the leaf vertices in the vertex hook, for the 33 leaf block ids (including the `|TreeCanopy` variants used by generated trees).
+`leaves.wgsl` makes leaves sway gently, as if there were a light wind. It moves the leaf vertices in the vertex hook, for every block flagged as vegetation but not dirt. This also covers grass plants and flowers, so they sway too.
 
 - `LEAF_SWAY`: how far the leaves move (0.07 by default; higher = stronger wind).
 - `LEAF_WIND_DIR`: wind direction on the ground plane (x, z).
@@ -98,7 +98,7 @@ Limit: vertex hooks are not allowed in "strict" games. In a strict world Bloxd t
 
 ## Cycle shader (all-in-one)
 
-`shaders/Cycle/core.wgsl` fades Night → Sunrise → Morning → Day → Sunset → Night, based on `bloxdTime()`.
+`shaders/Cycle/core.wgsl` fades Night → Sunrise → Morning → Day → Sunset → Night, based on `bloxdSeconds()`.
 
 - `CYCLE_SECONDS`: length of a full cycle (must divide 3600: 600, 900, 1200, 1800, 3600).
 - `START_LOOK`: mood at start-up (0 Night, 1 Sunrise, 2 Morning, 3 Day, 4 Sunset).
