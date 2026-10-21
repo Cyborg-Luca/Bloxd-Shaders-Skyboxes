@@ -17,7 +17,7 @@ Five moods, each with a shader and a matching skybox:
 
 ```
 shaders/<Mood>/
-    pack.json          (apiVersion 2)
+    pack.json          (apiVersion 3)
     core.wgsl          light, colours, shadows        (required)
     reflections.wgsl   sun reflections on blocks      (required)
     water.wgsl         water                          (optional)
@@ -31,7 +31,7 @@ tools/make_sky.py      script that generates the skyboxes
 
 ## Shaders
 
-- Format: Bloxd shader API **version 2** (`apiVersion: 2`), written in WGSL.
+- Format: Bloxd shader API **version 3** (`apiVersion: 3`), written in WGSL.
 - They modify the terrain light (`bloxdTerrainLight`), the water (`bloxdLiquidSurface`, `bloxdLiquidLight`), the lava (`bloxdTerrainSurface`) and the leaves (`bloxdTerrainVertex`).
 - Each shader has its own sun direction and colour (`SUN_RAW`, `SUN_COLOUR`), fog colour and shading.
 - A shader cannot draw the sky: the API has no function for it. That is why the skyboxes are separate.
